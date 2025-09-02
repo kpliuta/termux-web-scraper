@@ -1,10 +1,11 @@
 # TODO
 # arguments
-# - upgrade (-u): packages (system, proot_distro)
+# - upgrade (-u): upgrade container packages (default: false)
 
 # add arguments handling and descriptive help
 
-# upgrade packages is argument is set
+# upgrade packages if upgrade argument is set
 
 # install dependencies (if it's not installed yet):
+# - Poetry
 # - tbd...

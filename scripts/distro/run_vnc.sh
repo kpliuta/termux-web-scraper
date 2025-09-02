@@ -62,4 +62,7 @@ echo "  - Geometry: ${GEOMETRY}"
 
 vncserver "${DISPLAY}" -geometry "${GEOMETRY}"
 
+# TODO: implement graceful awaiting logic instead of sleep here
+sleep 10
+
 echo "VNC server started successfully."

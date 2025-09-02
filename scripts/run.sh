@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This script is the single entry point for the web scraper.
+# This script is the entry point for the web scraper.
 # It is designed to be executed from the Android's Termux emulator.
 #
 # The script performs the following actions:
@@ -11,13 +11,8 @@
 #   5. Runs the web scraping scenario within the Arch Linux container, mounting necessary directories.
 #   6. Can run the scraper in a continuous loop with a configurable timeout.
 #
-# Dependencies:
-#   - Must be run in Termux.
-#   - 'proot-distro' must be installed in Termux.
-#   - The scenarios directory must be a valid Python Poetry project.
-#
-# Usage Example:
-#   ./scripts/run.sh -s /path/to/your/scenarios -f your_script.py -l -t 600
+# Usage:
+#   ./scripts/run.sh -s /path/to/your/scenarios -f your_script.py [options]
 #
 
 # Exit immediately if a command exits with a non-zero status.
@@ -102,6 +97,16 @@ if [ ! -f "$SCRIPT_PATH" ] || [ "${SCRIPT##*.}" != "py" ]; then
     exit 1
 fi
 
+# --- Configuration ---
+
+SCRIPTS_DIR=$(realpath "$(dirname "$0")")
+DISTRO_SCRIPTS_DIR="$SCRIPTS_DIR/distro"
+TERMUX_SCRIPTS_DIR="$SCRIPTS_DIR/termux"
+
+MNT_SCRAPER="/mnt/scraper"
+MNT_DISTRO_SCRIPTS_DIR="$MNT_SCRAPER/scripts"
+MNT_SCENARIOS_DIR="$MNT_SCRAPER/scenarios"
+
 # Create output directory if it doesn't exist.
 if [ ! -d "$OUTPUT_DIR" ]; then
     echo "Creating output directory: $OUTPUT_DIR"
@@ -112,18 +117,12 @@ if [ ! -d "$OUTPUT_DIR" ]; then
 fi
 OUTPUT_DIR=$(realpath "$OUTPUT_DIR")
 
-# --- Main Execution ---
-
-SCRIPTS_DIR=$(realpath "$(dirname "$0")")
-DISTRO_SCRIPTS_DIR="$SCRIPTS_DIR/distro"
-TERMUX_SCRIPTS_DIR="$SCRIPTS_DIR/termux"
-
-MNT_SCRAPER="/mnt/scraper"
-MNT_DISTRO_SCRIPTS_DIR="$MNT_SCRAPER/scripts"
-MNT_SCENARIOS_DIR="$MNT_SCRAPER/scenarios"
-
 echo "Installing Termux dependencies..."
-./"$TERMUX_SCRIPTS_DIR"/install_dependencies.sh
+termux_upgrade_arg=""
+if [ "$UPGRADE" = true ]; then
+    termux_upgrade_arg="-u"
+fi
+"$TERMUX_SCRIPTS_DIR/install_dependencies.sh" "$termux_upgrade_arg"
 
 # Install Arch Linux if not present
 if ! proot-distro list --installed | grep -q "archlinux"; then
@@ -131,7 +130,8 @@ if ! proot-distro list --installed | grep -q "archlinux"; then
     proot-distro install archlinux
 fi
 
-# --- Main Loop ---
+# --- Main Execution ---
+
 run_scraper() {
     echo "Starting scraper..."
     
