@@ -7,8 +7,8 @@
 #   1. Parses command-line arguments.
 #   2. Validates the environment (Termux) and arguments.
 #   3. Installs necessary Termux packages.
-#   4. Installs and configures an Arch Linux proot-distro if not already present.
-#   5. Runs the web scraping scenario within the Arch Linux container, mounting necessary directories.
+#   4. Installs and configures a Ubuntu Linux proot-distro if not already present.
+#   5. Runs the web scraping scenario within the Ubuntu Linux container, mounting necessary directories.
 #   6. Can run the scraper in a continuous loop with a configurable timeout.
 #
 # Usage:
@@ -45,6 +45,7 @@ show_help() {
     echo "  -i, --loop-error-ignore           Ignore errors during loop iterations (default: false)."
     echo "  -d, --output-dir local:container  Specifies a local directory (on the Android device) to bind a directory inside the"
     echo "                                    container. This is used to get files (e.g., screenshots, scraped data) out of the container."
+    echo "                                    (default: /sdcard/termux-web-scraper:/mnt/scraper/out)"
     echo "  -h, --help                        Show this help message."
 }
 
@@ -107,6 +108,10 @@ MNT_SCRAPER="/mnt/scraper"
 MNT_DISTRO_SCRIPTS_DIR="$MNT_SCRAPER/scripts"
 MNT_SCENARIOS_DIR="$MNT_SCRAPER/scenarios"
 
+# Request storage access permission from Termux to be able to write to /sdcard.
+echo "Requesting storage access..."
+termux-setup-storage
+
 # Create output directory if it doesn't exist.
 if [ ! -d "$OUTPUT_DIR" ]; then
     echo "Creating output directory: $OUTPUT_DIR"
@@ -124,10 +129,10 @@ if [ "$UPGRADE" = true ]; then
 fi
 "$TERMUX_SCRIPTS_DIR/install_dependencies.sh" "$termux_upgrade_arg"
 
-# Install Arch Linux if not present
-if ! proot-distro list --installed | grep -q "archlinux"; then
-    echo "Arch Linux not found. Installing..."
-    proot-distro install archlinux
+# Install Ubuntu Linux if not present
+if ! proot-distro list --installed | grep -q "ubuntu"; then
+    echo "Ubuntu Linux not found. Installing..."
+    proot-distro install ubuntu
 fi
 
 # --- Main Execution ---
@@ -140,7 +145,7 @@ run_scraper() {
         upgrade_arg="-u"
     fi
 
-    proot-distro login archlinux \
+    proot-distro login ubuntu \
         --bind "$DISTRO_SCRIPTS_DIR:$MNT_DISTRO_SCRIPTS_DIR" \
         --bind "$SCENARIOS_DIR:$MNT_SCENARIOS_DIR" \
         --bind "$OUTPUT_DIR:$MNT_OUTPUT_DIR" \

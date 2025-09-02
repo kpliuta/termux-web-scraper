@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# This script starts a VNC server (e.g., TigerVNC or TightVNC).
+# This script starts a VNC server (e.g., tightvncserver).
 #
 # Dependencies:
-#   - A VNC server implementation (e.g., TigerVNC) that provides the 'vncserver' command.
+#   - A VNC server implementation (e.g., tightvncserver) that provides the 'vncserver' command.
 #
 # Usage:
 #   export DISPLAY=:1
@@ -19,7 +19,7 @@ set -e
 # Validate that vncserver is installed and executable.
 if ! command -v vncserver >/dev/null 2>&1; then
   echo "Error: 'vncserver' command not found." >&2
-  echo "Please install a VNC server (e.g., TigerVNC) and ensure it's in your PATH." >&2
+  echo "Please install a VNC server (e.g., tightvncserver) and ensure it's in your PATH." >&2
   exit 1
 fi
 
@@ -60,6 +60,7 @@ echo "Starting VNC server..."
 echo "  - Display:  ${DISPLAY}"
 echo "  - Geometry: ${GEOMETRY}"
 
+# TODO: deal with 'error: expected absolute path: "--shm-helper"' messages during execution
 vncserver "${DISPLAY}" -geometry "${GEOMETRY}"
 
 # TODO: implement graceful awaiting logic instead of sleep here

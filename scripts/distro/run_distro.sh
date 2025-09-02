@@ -102,6 +102,9 @@ if [ "$UPGRADE" = true ]; then
 fi
 "$DISTRO_SCRIPTS_DIR/install_dependencies.sh" "$upgrade_arg"
 
+echo "Setting up VNC server..."
+"$DISTRO_SCRIPTS_DIR/setup_vnc.sh"
+
 # --- Main Execution ---
 
 # Change to the scenarios directory so poetry can find its virtual environment.

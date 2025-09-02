@@ -19,11 +19,10 @@ fi
 
 # --- Main Execution ---
 
-echo "Updating Termux package lists..."
-# The -y flag automatically answers yes to prompts.
-pkg update -y
-
 if [ "$UPGRADE" = true ]; then
+    echo "Updating Termux package lists..."
+    pkg update -y
+
     echo "Upgrading installed Termux packages..."
     pkg upgrade -y
 fi
