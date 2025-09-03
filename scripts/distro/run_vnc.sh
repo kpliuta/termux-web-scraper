@@ -40,19 +40,32 @@ GEOMETRY="${VNC_GEOMETRY:-$DEFAULT_GEOMETRY}"
 
 echo "Preparing VNC session..."
 
-# Clean up stale lock files from previous crashed sessions.
 DISPLAY_NUM="${DISPLAY#:}" # Extracts the number, e.g., ":1" -> "1"
 
+# Clean up stale lock files from previous crashed sessions.
 LOCK_FILE_X="/tmp/.X${DISPLAY_NUM}-lock"
-if [ -f "$LOCK_FILE_X" ]; then
+if [ -e "$LOCK_FILE_X" ]; then
     echo "  - Removing ${LOCK_FILE_X} lock file..."
     rm -f "$LOCK_FILE_X"
 fi
 
 LOCK_FILE_X11="/tmp/.X11-unix/X${DISPLAY_NUM}"
-if [ -f "$LOCK_FILE_X11" ]; then
+if [ -e "$LOCK_FILE_X11" ]; then
     echo "  - Removing ${LOCK_FILE_X11} lock file..."
     rm -f "$LOCK_FILE_X11"
+fi
+
+# Clean up stale PID and log files from previous crashed sessions.
+PID_FILE="$HOME/.vnc/$(hostname)${DISPLAY}.pid"
+if [ -f "$PID_FILE" ]; then
+    echo "  - Removing stale PID file: ${PID_FILE}..."
+    rm -f "$PID_FILE"
+fi
+
+LOG_FILE="$HOME/.vnc/$(hostname)${DISPLAY}.log"
+if [ -f "$LOG_FILE" ]; then
+    echo "  - Removing stale log file: ${LOG_FILE}..."
+    rm -f "$LOG_FILE"
 fi
 
 # Start the VNC server process.

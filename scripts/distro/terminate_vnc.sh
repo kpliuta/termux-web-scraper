@@ -34,9 +34,13 @@ fi
 # --- Session Check ---
 
 echo "Checking for active VNC session on display ${DISPLAY}..."
-# Use `vncserver -list` and `grep` to check if a session for the current display exists.
-# The `grep -w` ensures an exact match (e.g., :1 won't match :10).
-if ! vncserver -list | grep -q -w "${DISPLAY}"; then
+
+# Construct the path to the VNC PID file.
+# The PID file is typically located at ~/.vnc/<hostname>:<display_number>.pid.
+PID_FILE="$HOME/.vnc/$(hostname)${DISPLAY}.pid"
+
+# Check if the PID file exists to determine if a session is active.
+if ! [ -f "$PID_FILE" ]; then
   echo "Error: No VNC server is running on display ${DISPLAY}." >&2
   exit 1
 fi

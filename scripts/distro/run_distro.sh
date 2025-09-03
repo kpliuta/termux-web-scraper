@@ -50,6 +50,7 @@ while [ "$#" -gt 0 ]; do
         -f|--script) SCRIPT="$2"; shift ;;
         -d|--output-dir) OUTPUT_DIR="$2"; shift ;;
         -h|--help) show_help; exit 0 ;;
+        "") ;;  # ignore empty string arguments
         *) echo "Unknown parameter passed: $1"; show_help; exit 1 ;;
     esac
     shift

@@ -29,6 +29,7 @@ while [ "$#" -gt 0 ]; do
     case $1 in
         -u|--upgrade) UPGRADE=true ;;
         -h|--help) show_help; exit 0 ;;
+        "") ;;  # ignore empty string arguments
         *) echo "Unknown parameter passed: $1"; show_help; exit 1 ;;
     esac
     shift
@@ -46,7 +47,7 @@ if [ "$UPGRADE" = true ]; then
 fi
 
 # List of the basic required packages from the official Ubuntu Linux repository.
-DEPENDENCIES="wget xfce4 dbus-x11 tightvncserver firefox firefox-geckodriver python3-poetry"
+DEPENDENCIES="wget xfce4 dbus-x11 tightvncserver firefox python3-poetry"
 
 echo "Checking and installing dependencies..."
 
@@ -66,4 +67,4 @@ if ! dpkg -s ffmpeg >/dev/null 2>&1; then
     apt-get install -y ffmpeg
 fi
 
-echo "Distro dependencies are up to date."
+echo "Container dependencies are up to date."

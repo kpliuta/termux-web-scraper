@@ -28,6 +28,7 @@ while [ "$#" -gt 0 ]; do
     case $1 in
         -u|--upgrade) UPGRADE=true ;;
         -h|--help) show_help; exit 0 ;;
+        "") ;;  # ignore empty string arguments
         *) echo "Unknown parameter passed: $1"; show_help; exit 1 ;;
     esac
     shift
