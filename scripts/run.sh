@@ -109,8 +109,10 @@ MNT_DISTRO_SCRIPTS_DIR="$MNT_SCRAPER/scripts"
 MNT_SCENARIOS_DIR="$MNT_SCRAPER/scenarios"
 
 # Request storage access permission from Termux to be able to write to /sdcard.
-echo "Requesting storage access..."
-termux-setup-storage
+if [ ! -d "$HOME/storage/shared" ]; then
+    echo "Requesting storage access..."
+    termux-setup-storage
+fi
 
 # Create output directory if it doesn't exist.
 if [ ! -d "$OUTPUT_DIR" ]; then
@@ -130,7 +132,7 @@ fi
 "$TERMUX_SCRIPTS_DIR/install_dependencies.sh" "$termux_upgrade_arg"
 
 # Install Ubuntu Linux if not present
-if ! proot-distro list --installed | grep -q "ubuntu"; then
+if ! proot-distro login ubuntu -- true > /dev/null 2>&1; then
     echo "Ubuntu Linux not found. Installing..."
     proot-distro install ubuntu
 fi

@@ -56,7 +56,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 # Check if running in a proot-distro container.
-if [ -z "$PROOT_DISTRO_VERSION" ]; then
+if ! uname -a | grep -q -i "proot-distro"; then
     echo "Error: This script must be run within a proot-distro container."
     exit 1
 fi

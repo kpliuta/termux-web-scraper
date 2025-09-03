@@ -35,13 +35,14 @@ done
 
 # --- Main Execution ---
 
-if [ "$UPGRADE" = true ]; then
-    echo "Updating Termux package lists..."
-    pkg update -y
-
-    echo "Upgrading installed Termux packages..."
-    pkg upgrade -y
-fi
+# TODO: pkg update / pkg upgrade is broken for termux atm...
+#if [ "$UPGRADE" = true ]; then
+#    echo "Updating Termux package lists..."
+#    pkg update -y
+#
+#    echo "Upgrading installed Termux packages..."
+#    pkg upgrade -y
+#fi
 
 if ! pkg list-installed | grep -q "^proot-distro/"; then
     echo "Installing proot-distro..."

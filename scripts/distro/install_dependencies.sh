@@ -50,6 +50,7 @@ DEPENDENCIES="wget xfce4 dbus-x11 tightvncserver firefox firefox-geckodriver pyt
 
 echo "Checking and installing dependencies..."
 
+# TODO: ensure all required dependencies are installed without user interaction (layout configuration, etc.).
 # Install dependencies if they are not installed yet.
 for pkg in $DEPENDENCIES; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then
@@ -58,7 +59,8 @@ for pkg in $DEPENDENCIES; do
     fi
 done
 
-# ffmpeg is a dependency for selenium RecaptchaSolver
+# TODO: move scenario dependent dependencies to children repos.
+# ffmpeg is a dependency for selenium RecaptchaSolver.
 if ! dpkg -s ffmpeg >/dev/null 2>&1; then
     echo "Installing ffmpeg..."
     apt-get install -y ffmpeg
