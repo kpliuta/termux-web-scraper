@@ -11,7 +11,7 @@
 #   6. Stops the VNC server upon completion.
 #
 # Usage:
-#   ./run_distro.sh -d /path/to/your/work-dir -f your_scenario.py -o /path/to/your/output/dir [options]
+#   ./run_distro.sh -s session-id -d /path/to/your/work-dir -f your_scenario.py -o /path/to/your/output/dir [options]
 #
 
 # Exit immediately if a command exits with a non-zero status.
@@ -19,19 +19,21 @@ set -e
 
 # --- Default values ---
 
-UPGRADE=false
+SESSION_ID=""
 WORK_DIR=""
 SCENARIO_FILE=""
 OUTPUT_DIR=""
+UPGRADE=false
 
 # --- Help message ---
 
 show_help() {
-    echo "Usage: $0 -d <work-dir> -f <scenario-file> -o <output-dir> [options]"
+    echo "Usage: $0 -s <session-id> -d <work-dir> -f <scenario-file> -o <output-dir> [options]"
     echo
     echo "This script is intended to be run from within the proot-distro container."
     echo
     echo "Required Arguments:"
+    echo "  -s, --session-id id        Scraper session ID."
     echo "  -d, --work-dir dir         Path to a mounted poetry project repository containing selenium scenarios."
     echo "  -f, --scenario-file file   Relative path to a Python selenium scenario file within the specified work-dir."
     echo "  -o, --output-dir dir       Path to the mounted directory where scraper output will be saved."
@@ -45,10 +47,11 @@ show_help() {
 
 while [ "$#" -gt 0 ]; do
     case $1 in
-        -u|--upgrade) UPGRADE=true ;;
+        -s|--session-id) SESSION_ID="$2"; shift ;;
         -d|--work-dir) WORK_DIR="$2"; shift ;;
         -f|--scenario-file) SCENARIO_FILE="$2"; shift ;;
         -o|--output-dir) OUTPUT_DIR="$2"; shift ;;
+        -u|--upgrade) UPGRADE=true ;;
         -h|--help) show_help; exit 0 ;;
         "") ;;  # ignore empty string arguments
         *) echo "Unknown parameter passed: $1"; show_help; exit 1 ;;
@@ -63,7 +66,7 @@ if ! uname -a | grep -q -i "proot-distro"; then
 fi
 
 # Check for required arguments.
-if [ -z "$WORK_DIR" ] || [ -z "$SCENARIO_FILE" ] || [ -z "$OUTPUT_DIR" ]; then
+if [ -z "$SESSION_ID" ] || [ -z "$WORK_DIR" ] || [ -z "$SCENARIO_FILE" ] || [ -z "$OUTPUT_DIR" ]; then
     echo "Error: Missing required arguments."
     show_help
     exit 1
@@ -115,12 +118,19 @@ cd "$WORK_DIR"
 echo "Installing Python dependencies with Poetry..."
 poetry install
 
+# Export the session ID as an environment variable so the python script can access it.
+export SCRAPER_SESSION_ID="$SESSION_ID"
+echo "Session ID set to: $SCRAPER_SESSION_ID"
+
 # Export the output directory path as an environment variable so the python script can access it.
 export SCRAPER_OUTPUT_DIR="$OUTPUT_DIR"
 echo "Output directory set to: $SCRAPER_OUTPUT_DIR"
 
-# Set up a trap to ensure VNC is terminated when the script exits for any reason.
-trap 'echo "Terminating VNC server..."; "$DISTRO_SCRIPTS_DIR/terminate_vnc.sh"' EXIT
+# Set up a trap to ensure VNC is terminated and environment variables are cleaned up when the script exits for any reason.
+trap 'echo "Terminating VNC server..."; \
+      "$DISTRO_SCRIPTS_DIR/terminate_vnc.sh"; \
+      unset SCRAPER_SESSION_ID; \
+      unset SCRAPER_OUTPUT_DIR' EXIT
 
 echo "Starting VNC server..."
 "$DISTRO_SCRIPTS_DIR/run_vnc.sh"

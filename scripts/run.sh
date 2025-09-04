@@ -103,6 +103,9 @@ fi
 
 # --- Configuration ---
 
+# Generate a UUID for the scraper session.
+SCRAPER_SESSION_ID=$(uuidgen)
+
 SCRIPTS_DIR=$(realpath "$(dirname "$0")")
 DISTRO_SCRIPTS_DIR="$SCRIPTS_DIR/distro"
 TERMUX_SCRIPTS_DIR="$SCRIPTS_DIR/termux"
@@ -157,6 +160,7 @@ run_scraper() {
         --no-sysvipc -- \
         "$MNT_DISTRO_SCRIPTS_DIR/run_distro.sh" \
         $upgrade_arg \
+        -s "$SCRAPER_SESSION_ID" \
         -d "$MNT_WORK_DIR" \
         -f "$SCENARIO_FILE" \
         -o "$MNT_OUTPUT_DIR"
