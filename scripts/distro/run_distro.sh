@@ -11,7 +11,7 @@
 #   6. Stops the VNC server upon completion.
 #
 # Usage:
-#   ./run_distro.sh -s /path/to/your/scenarios -f your_script.py -d /path/to/your/output/dir [options]
+#   ./run_distro.sh -d /path/to/your/work-dir -f your_scenario.py -o /path/to/your/output/dir [options]
 #
 
 # Exit immediately if a command exits with a non-zero status.
@@ -20,21 +20,21 @@ set -e
 # --- Default values ---
 
 UPGRADE=false
-SCENARIOS_DIR=""
-SCRIPT=""
+WORK_DIR=""
+SCENARIO_FILE=""
 OUTPUT_DIR=""
 
 # --- Help message ---
 
 show_help() {
-    echo "Usage: $0 -s <scenarios-dir> -f <script> -d <output-dir> [options]"
+    echo "Usage: $0 -d <work-dir> -f <scenario-file> -o <output-dir> [options]"
     echo
     echo "This script is intended to be run from within the proot-distro container."
     echo
     echo "Required Arguments:"
-    echo "  -s, --scenarios-dir dir    Path to the mounted poetry repo with selenium scenarios."
-    echo "  -f, --script file          Path to the python selenium scenario in the scenarios-dir."
-    echo "  -d, --output-dir dir       Path to the mounted directory for scraper output."
+    echo "  -d, --work-dir dir         Path to a mounted poetry project repository containing selenium scenarios."
+    echo "  -f, --scenario-file file   Relative path to a Python selenium scenario file within the specified work-dir."
+    echo "  -o, --output-dir dir       Path to the mounted directory where scraper output will be saved."
     echo
     echo "Options:"
     echo "  -u, --upgrade              Upgrade container packages (default: false)."
@@ -46,9 +46,9 @@ show_help() {
 while [ "$#" -gt 0 ]; do
     case $1 in
         -u|--upgrade) UPGRADE=true ;;
-        -s|--scenarios-dir) SCENARIOS_DIR="$2"; shift ;;
-        -f|--script) SCRIPT="$2"; shift ;;
-        -d|--output-dir) OUTPUT_DIR="$2"; shift ;;
+        -d|--work-dir) WORK_DIR="$2"; shift ;;
+        -f|--scenario-file) SCENARIO_FILE="$2"; shift ;;
+        -o|--output-dir) OUTPUT_DIR="$2"; shift ;;
         -h|--help) show_help; exit 0 ;;
         "") ;;  # ignore empty string arguments
         *) echo "Unknown parameter passed: $1"; show_help; exit 1 ;;
@@ -63,21 +63,21 @@ if ! uname -a | grep -q -i "proot-distro"; then
 fi
 
 # Check for required arguments.
-if [ -z "$SCENARIOS_DIR" ] || [ -z "$SCRIPT" ] || [ -z "$OUTPUT_DIR" ]; then
+if [ -z "$WORK_DIR" ] || [ -z "$SCENARIO_FILE" ] || [ -z "$OUTPUT_DIR" ]; then
     echo "Error: Missing required arguments."
     show_help
     exit 1
 fi
 
-# Validate scenarios directory.
-if [ ! -d "$SCENARIOS_DIR" ] || [ ! -f "$SCENARIOS_DIR/pyproject.toml" ]; then
+# Validate work directory.
+if [ ! -d "$WORK_DIR" ] || [ ! -f "$WORK_DIR/pyproject.toml" ]; then
     echo "Error: Scenarios directory '$SCENARIOS_DIR' is not a valid Poetry project."
     exit 1
 fi
 
-# Validate script file.
-SCRIPT_PATH="$SCENARIOS_DIR/$SCRIPT"
-if [ ! -f "$SCRIPT_PATH" ] || [ "${SCRIPT##*.}" != "py" ]; then
+# Validate scenario file.
+SCENARIO_FILE_PATH="$WORK_DIR/$SCENARIO_FILE"
+if [ ! -f "$SCENARIO_FILE_PATH" ] || [ "${SCENARIO_FILE##*.}" != "py" ]; then
     echo "Error: Script file '$SCRIPT_PATH' does not exist or is not a Python script."
     exit 1
 fi
@@ -108,8 +108,8 @@ echo "Setting up VNC server..."
 
 # --- Main Execution ---
 
-# Change to the scenarios directory so poetry can find its virtual environment.
-cd "$SCENARIOS_DIR"
+# Change to the work directory so poetry can find its virtual environment.
+cd "$WORK_DIR"
 
 # Install Python dependencies defined in pyproject.toml.
 echo "Installing Python dependencies with Poetry..."
@@ -126,7 +126,7 @@ echo "Starting VNC server..."
 "$DISTRO_SCRIPTS_DIR/run_vnc.sh"
 
 # Execute the python script using poetry.
-echo "Executing scenario script: $SCRIPT"
-poetry run python "$SCRIPT"
+echo "Executing scenario script: $SCENARIO_FILE"
+poetry run python "$SCENARIO_FILE"
 
 echo "Distro script finished."

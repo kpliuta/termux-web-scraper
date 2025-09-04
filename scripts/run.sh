@@ -12,7 +12,7 @@
 #   6. Can run the scraper in a continuous loop with a configurable timeout.
 #
 # Usage:
-#   ./scripts/run.sh -s /path/to/your/scenarios -f your_script.py [options]
+#   ./scripts/run.sh -d /path/to/your/work-dir -f your_scenario.py [options]
 #
 
 # Exit immediately if a command exits with a non-zero status.
@@ -20,8 +20,8 @@ set -e
 
 # --- Default values ---
 
-SCENARIOS_DIR=""
-SCRIPT=""
+WORK_DIR=""
+SCENARIO_FILE=""
 UPGRADE=false
 LOOP=false
 LOOP_TIMEOUT=300 # 5 minutes
@@ -32,20 +32,22 @@ MNT_OUTPUT_DIR="/mnt/scraper/out"
 # --- Help message ---
 
 show_help() {
-    echo "Usage: $0 -s <scenarios-dir> -f <script> [options]"
+    echo "Usage: $0 -d <work-dir> -f <scenario-file> [options]"
     echo
     echo "Required Arguments:"
-    echo "  -s, --scenarios-dir dir           Path to a poetry repo with selenium scenarios."
-    echo "  -f, --script x                    Path to a python selenium scenario in the scenarios-dir."
+    echo "  -d, --work-dir dir                Path to a poetry project repository containing selenium scenarios."
+    echo "  -f, --scenario-file file          Relative path to a Python selenium scenario file within the specified work-dir."
     echo
     echo "Options:"
-    echo "  -u, --upgrade                     Upgrade termux packages as well as container packages (default: false)."
-    echo "  -l, --loop                        Execute scraper in a loop (default: false)."
-    echo "  -t, --loop-timeout x              Used with a loop. Timeout in seconds between loop iterations (default: 300 (5 minutes))."
-    echo "  -i, --loop-error-ignore           Ignore errors during loop iterations (default: false)."
-    echo "  -d, --output-dir local:container  Specifies a local directory (on the Android device) to bind a directory inside the"
-    echo "                                    container. This is used to get files (e.g., screenshots, scraped data) out of the container."
-    echo "                                    (default: /sdcard/termux-web-scraper:/mnt/scraper/out)"
+    echo "  -u, --upgrade                     Upgrade Termux and container packages (default: false)."
+    echo "  -l, --loop                        Execute the scraper in a continuous loop (default: false)."
+    echo "  -t, --loop-timeout x              Set the timeout in seconds between loop iterations."
+    echo "                                    Requires the --loop argument (default: 300 (5 minutes))."
+    echo "  -i, --loop-error-ignore           Ignore errors that occur during loop iterations (default: false)."
+    echo "  -o, --output-dir local:container  Specifies a local directory path on the host Android device to bind"
+    echo "                                    to a directory inside the container. This binding allows files, such as"
+    echo "                                    screenshots and scraped data, to be transferred from the container to the local device."
+    echo "                                    The default binding is /sdcard/termux-web-scraper (local) to /mnt/scraper/out (container)."
     echo "  -h, --help                        Show this help message."
 }
 
@@ -57,9 +59,9 @@ while [ "$#" -gt 0 ]; do
         -l|--loop) LOOP=true ;;
         -t|--loop-timeout) LOOP_TIMEOUT="$2"; shift ;;
         -i|--loop-error-ignore) LOOP_ERROR_IGNORE=true ;;
-        -s|--scenarios-dir) SCENARIOS_DIR="$2"; shift ;;
-        -f|--script) SCRIPT="$2"; shift ;;
-        -d|--output-dir)
+        -d|--work-dir) WORK_DIR="$2"; shift ;;
+        -f|--scenario-file) SCENARIO_FILE="$2"; shift ;;
+        -o|--output-dir)
             OUTPUT_DIR_RAW="$2"
             OUTPUT_DIR="${OUTPUT_DIR_RAW%%:*}"
             MNT_OUTPUT_DIR="${OUTPUT_DIR_RAW#*:}"
@@ -79,22 +81,22 @@ if [ -z "$TERMUX_VERSION" ]; then
 fi
 
 # Check for required arguments.
-if [ -z "$SCENARIOS_DIR" ] || [ -z "$SCRIPT" ]; then
+if [ -z "$WORK_DIR" ] || [ -z "$SCENARIO_FILE" ]; then
     echo "Error: Missing required arguments."
     show_help
     exit 1
 fi
 
-# Validate scenarios directory.
-if [ ! -d "$SCENARIOS_DIR" ] || [ ! -f "$SCENARIOS_DIR/pyproject.toml" ]; then
+# Validate work directory.
+if [ ! -d "$WORK_DIR" ] || [ ! -f "$WORK_DIR/pyproject.toml" ]; then
     echo "Error: Scenarios directory '$SCENARIOS_DIR' is not a valid Poetry project."
     exit 1
 fi
-SCENARIOS_DIR=$(realpath "$SCENARIOS_DIR")
+WORK_DIR=$(realpath "$WORK_DIR")
 
-# Validate script file.
-SCRIPT_PATH="$SCENARIOS_DIR/$SCRIPT"
-if [ ! -f "$SCRIPT_PATH" ] || [ "${SCRIPT##*.}" != "py" ]; then
+# Validate scenario file.
+SCENARIO_FILE_PATH="$WORK_DIR/$SCENARIO_FILE"
+if [ ! -f "$SCENARIO_FILE_PATH" ] || [ "${SCENARIO_FILE##*.}" != "py" ]; then
     echo "Error: Script file '$SCRIPT_PATH' does not exist or is not a Python script."
     exit 1
 fi
@@ -107,7 +109,7 @@ TERMUX_SCRIPTS_DIR="$SCRIPTS_DIR/termux"
 
 MNT_SCRAPER="/mnt/scraper"
 MNT_DISTRO_SCRIPTS_DIR="$MNT_SCRAPER/scripts"
-MNT_SCENARIOS_DIR="$MNT_SCRAPER/scenarios"
+MNT_WORK_DIR="$MNT_SCRAPER/workdir"
 
 # Request storage access permission from Termux to be able to write to /sdcard.
 if [ ! -d "$HOME/storage/shared" ]; then
@@ -150,14 +152,14 @@ run_scraper() {
 
     proot-distro login ubuntu \
         --bind "$DISTRO_SCRIPTS_DIR:$MNT_DISTRO_SCRIPTS_DIR" \
-        --bind "$SCENARIOS_DIR:$MNT_SCENARIOS_DIR" \
+        --bind "$WORK_DIR:$MNT_WORK_DIR" \
         --bind "$OUTPUT_DIR:$MNT_OUTPUT_DIR" \
         --no-sysvipc -- \
         "$MNT_DISTRO_SCRIPTS_DIR/run_distro.sh" \
         $upgrade_arg \
-        -s "$MNT_SCENARIOS_DIR" \
-        -f "$SCRIPT" \
-        -d "$MNT_OUTPUT_DIR"
+        -d "$MNT_WORK_DIR" \
+        -f "$SCENARIO_FILE" \
+        -o "$MNT_OUTPUT_DIR"
 }
 
 if [ "$LOOP" = true ]; then
