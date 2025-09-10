@@ -37,6 +37,9 @@ done
 
 # --- Main Execution ---
 
+# Install dependencies without manual intervention.
+export DEBIAN_FRONTEND=noninteractive
+
 if [ "$UPGRADE" = true ]; then
     echo "Updating container package lists..."
     apt-get update -y
@@ -51,7 +54,6 @@ DEPENDENCIES="wget xfce4 dbus-x11 tightvncserver firefox python3-poetry"
 
 echo "Checking and installing dependencies..."
 
-# TODO: ensure all required dependencies are installed without user interaction (layout configuration, etc.).
 # Install dependencies if they are not installed yet.
 for pkg in $DEPENDENCIES; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then

@@ -36,6 +36,9 @@ done
 
 # --- Main Execution ---
 
+# Install dependencies without manual intervention.
+export DEBIAN_FRONTEND=noninteractive
+
 # TODO: pkg update / pkg upgrade is broken for termux atm...
 #if [ "$UPGRADE" = true ]; then
 #    echo "Updating Termux package lists..."
