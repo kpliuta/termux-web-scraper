@@ -1,7 +1,10 @@
+import platform
 from typing import Callable, List, Dict, Any, Tuple, Optional
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
 
 from .error_hook import Notifier, ErrorHook
 from .scraper_runner import ScraperRunner
@@ -92,10 +95,33 @@ class ScraperBuilder:
         """
         options = self._driver_options or get_default_driver_options()
 
+        service = FirefoxService(TermuxGeckoDriverManager().install())
+
         return ScraperRunner(
-            driver=webdriver.Firefox(options),
+            driver=webdriver.Firefox(service=service, options=options),
             steps=self._steps,
             error_hooks=self._error_hooks,
             state=self._state,
             notifiers=self._notifiers
         )
+
+
+class TermuxGeckoDriverManager(GeckoDriverManager):
+    """
+    Custom GeckoDriverManager for Termux.
+
+    This class overrides the OS type detection to work correctly within the
+    Termux environment on Android.
+    """
+
+    def get_os_type(self) -> str:
+        """
+        Overrides the OS type to ensure the correct GeckoDriver is used.
+
+        The `webdriver_manager` does not correctly detect the OS for physical
+        devices running Termux. This method returns 'linux-aarch64' if the machine
+        architecture is 'aarch64' or otherwise falls back to the default implementation.
+        """
+        if platform.machine() == "aarch64":
+            return "linux-aarch64"
+        return super().get_os_type()
