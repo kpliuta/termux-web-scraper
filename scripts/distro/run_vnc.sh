@@ -44,16 +44,15 @@ DISPLAY_NUM="${DISPLAY#:}" # Extracts the number, e.g., ":1" -> "1"
 
 # Clean up stale lock files from previous crashed sessions.
 LOCK_FILE_X="/tmp/.X${DISPLAY_NUM}-lock"
-if [ -e "$LOCK_FILE_X" ]; then
-    echo "  - Removing ${LOCK_FILE_X} lock file..."
-    rm -f "$LOCK_FILE_X"
-fi
-
 LOCK_FILE_X11="/tmp/.X11-unix/X${DISPLAY_NUM}"
-if [ -e "$LOCK_FILE_X11" ]; then
-    echo "  - Removing ${LOCK_FILE_X11} lock file..."
-    rm -f "$LOCK_FILE_X11"
-fi
+
+# FIX: In some cases, VNC creates lock files that are not detectable by neither if [ -e "$FILE" ],
+# nor if [ -L "$FILE" ]. The script attempts to remove the specified items and provides a notification upon success.
+
+# Example of a problematic lock file:
+#   lrwxrwxrwx. 1 root root 100 Sep 1 12:00 /tmp/.X1-lock -> /.l2s/.l2s..tX1-lock0001
+rm "$LOCK_FILE_X" 2>/dev/null && echo "  - Removing ${LOCK_FILE_X} lock file..."
+rm "$LOCK_FILE_X11" 2>/dev/null && echo "  - Removing ${LOCK_FILE_X11} lock file..."
 
 # Clean up stale PID and log files from previous crashed sessions.
 PID_FILE="$HOME/.vnc/$(hostname)${DISPLAY}.pid"
@@ -73,7 +72,6 @@ echo "Starting VNC server..."
 echo "  - Display:  ${DISPLAY}"
 echo "  - Geometry: ${GEOMETRY}"
 
-# TODO: deal with 'error: expected absolute path: "--shm-helper"' messages during execution
 vncserver "${DISPLAY}" -geometry "${GEOMETRY}"
 
 # TODO: implement graceful awaiting logic instead of sleep here
