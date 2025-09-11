@@ -36,7 +36,6 @@ fi
 echo "Checking for active VNC session on display ${DISPLAY}..."
 
 # Construct the path to the VNC PID file.
-# The PID file is typically located at ~/.vnc/<hostname>:<display_number>.pid.
 PID_FILE="$HOME/.vnc/$(hostname)${DISPLAY}.pid"
 
 # Check if the PID file exists to determine if a session is active.
@@ -49,6 +48,39 @@ fi
 
 echo "Terminating VNC server on display ${DISPLAY}..."
 
+# Get the PID before killing the server.
+VNC_PID=$(cat "$PID_FILE")
+
+# The -kill command can fail if the process is already dead but the PID file is stale.
+# We'll ignore errors here (`set +e`) and verify termination gracefully later.
+set +e
 vncserver -kill "${DISPLAY}"
+set -e
+
+# Graceful Shutdown.
+echo "Waiting for VNC server to terminate..."
+
+ATTEMPTS=0
+MAX_ATTEMPTS=20 # 20 * 0.5s = 10s
+
+# Wait for the PID file to be removed.
+while [ -f "$PID_FILE" ] && [ "$ATTEMPTS" -lt "$MAX_ATTEMPTS" ]; do
+    sleep 0.5
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
+
+# If the PID file still exists, the graceful shutdown failed.
+if [ -f "$PID_FILE" ]; then
+    echo "Warning: VNC server did not terminate gracefully. PID file still exists." >&2
+    echo "Attempting to forcefully kill process $VNC_PID..." >&2
+    kill -9 "$VNC_PID" 2>/dev/null
+    sleep 1 # Give it a moment to die.
+fi
+
+# Double-check if the process is still running.
+if ps -p "$VNC_PID" > /dev/null 2>/dev/null; then
+    echo "Warning: VNC process $VNC_PID is still running. Forcefully killing..." >&2
+    kill -9 "$VNC_PID" 2>/dev/null
+fi
 
 echo "VNC server on display ${DISPLAY} terminated successfully."
