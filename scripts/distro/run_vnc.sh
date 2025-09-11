@@ -74,7 +74,39 @@ echo "  - Geometry: ${GEOMETRY}"
 
 vncserver "${DISPLAY}" -geometry "${GEOMETRY}"
 
-# TODO: implement graceful awaiting logic instead of sleep here
-sleep 10
+# Graceful Awaiting.
+echo "Waiting for VNC server to start..."
+
+# It can take a few seconds for the VNC server to create the PID file.
+# We will wait for a maximum of 10 seconds for the PID file to appear.
+ATTEMPTS=0
+MAX_ATTEMPTS=20 # 20 * 0.5s = 10s
+
+while [ ! -f "$PID_FILE" ] && [ "$ATTEMPTS" -lt "$MAX_ATTEMPTS" ]; do
+    sleep 0.5
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
+
+if [ ! -f "$PID_FILE" ]; then
+    echo "Error: VNC server failed to start. PID file not found after 10 seconds." >&2
+    if [ -f "$LOG_FILE" ]; then
+        echo "--- VNC Log ---" >&2
+        cat "$LOG_FILE" >&2
+        echo "--- End VNC Log ---" >&2
+    fi
+    exit 1
+fi
+
+# Additionally, check if the process is actually running
+VNC_PID=$(cat "$PID_FILE")
+if ! ps -p "$VNC_PID" > /dev/null; then
+    echo "Error: VNC server process with PID $VNC_PID is not running." >&2
+    if [ -f "$LOG_FILE" ]; then
+        echo "--- VNC Log ---" >&2
+        cat "$LOG_FILE" >&2
+        echo "--- End VNC Log ---" >&2
+    fi
+    exit 1
+fi
 
 echo "VNC server started successfully."
