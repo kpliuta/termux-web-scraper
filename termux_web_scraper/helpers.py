@@ -5,6 +5,7 @@ from typing import Any, Tuple, Union
 
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
 
@@ -55,6 +56,22 @@ def send_keys(driver: WebDriver, locator: Tuple[str, str], text: str, timeout: i
     print(f"Send keys to an element  {locator[0]}='{locator[1]}'")
     txt = get_element(driver, locator, timeout)
     txt.send_keys(text)
+
+
+def select_option_by_text(driver: WebDriver, locator: Tuple[str, str], option_text: str, timeout: int = 10):
+    """
+    Selects the dropdown option that matches the specified text.
+
+    Args:
+        driver: The Selenium WebDriver instance.
+        locator: A tuple containing the By strategy and the locator string.
+        option_text: The visible text to match against.
+        timeout: The maximum time in seconds to wait for the element to be visible.
+    """
+    print(f"Select {option_text} option for {locator[0]}='{locator[1]}'")
+    dropdown = get_element(driver, locator, timeout)
+    select = Select(dropdown)
+    select.select_by_visible_text(option_text)
 
 
 def random_sleep(x: Union[int, float], y: Union[int, float]) -> None:
