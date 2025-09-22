@@ -1,8 +1,9 @@
 import random
 import time
 from datetime import datetime
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Union, Optional
 
+from selenium.common import TimeoutException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import Select
@@ -24,6 +25,24 @@ def get_element(driver: WebDriver, locator: Tuple[str, str], timeout: int = 10) 
     print(f"Get an element  {locator[0]}='{locator[1]}'")
     wait = WebDriverWait(driver, timeout)
     return wait.until(ec.visibility_of_element_located(locator))
+
+
+def get_optional_element(driver: WebDriver, locator: Tuple[str, str], timeout: int = 10) -> Optional[Any]:
+    """
+    Waits for and returns a single web element identified by the given locator or None if not found.
+
+    Args:
+        driver: The Selenium WebDriver instance.
+        locator: A tuple containing the By strategy and the locator string (e.g., (By.ID, "element_id")).
+        timeout: The maximum time in seconds to wait for the element to be visible.
+
+    Returns:
+        The located web element or None if not found.
+    """
+    try:
+        return get_element(driver, locator, timeout)
+    except TimeoutException:
+        return None
 
 
 def click_element(driver: WebDriver, locator: Tuple[str, str], timeout: int = 10) -> None:
@@ -58,7 +77,7 @@ def send_keys(driver: WebDriver, locator: Tuple[str, str], text: str, timeout: i
     txt.send_keys(text)
 
 
-def select_option_by_text(driver: WebDriver, locator: Tuple[str, str], option_text: str, timeout: int = 10):
+def select_option_by_text(driver: WebDriver, locator: Tuple[str, str], option_text: str, timeout: int = 10) -> None:
     """
     Selects the dropdown option that matches the specified text.
 
