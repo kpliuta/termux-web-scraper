@@ -4,6 +4,8 @@
 
 A robust and flexible web scraping framework designed to run on Android devices using Termux. It leverages a `proot-distro` Ubuntu container to create a powerful and isolated scraping environment, enabling you to run complex Selenium-based web scraping tasks on your Android device.
 
+[The Droid You're Looking For: Scraping Websites on Android with Termux](https://kpliuta.github.io/blog/posts/scraping-websites-on-android-with-termux/)
+
 ## Features
 
 *   **Run Selenium on Android:** Execute web scraping scripts using Selenium and Firefox within a Termux environment.
