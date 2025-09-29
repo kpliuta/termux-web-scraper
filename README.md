@@ -172,6 +172,7 @@ scraper.run()
 *   **Example Project:** For a practical demonstration of the framework's capabilities, see the [termux-web-scraper-example](https://github.com/kpliuta/termux-web-scraper-example.git) repository.
 *   **Active Projects:** This framework is actively used in the these projects:
     * [sinotrack-alert-monitor](https://github.com/kpliuta/sinotrack-alert-monitor.git)
+    * [cita-previa-extranjeria-monitor](https://github.com/kpliuta/cita-previa-extranjeria-monitor)
 
 ## Contributing
 
