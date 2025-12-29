@@ -37,6 +37,17 @@ done
 
 # --- Main Execution ---
 
+# Prevent hangs during installation of elementary-xfce-icon-theme.
+# This issue occurs because gtk-update-icon-cache can be extremely slow or hang due to
+# how proot handles file system calls and memory.
+echo "Applying fix for gtk-update-icon-cache hang..."
+
+# 1. Tell dpkg to move the real binary if it tries to install it.
+dpkg-divert --divert /usr/bin/gtk-update-icon-cache.distrib --rename /usr/bin/gtk-update-icon-cache
+
+# 2. Create your dummy version that does nothing.
+ln -sf /bin/true /usr/bin/gtk-update-icon-cache
+
 # Install dependencies without manual intervention.
 export DEBIAN_FRONTEND=noninteractive
 
@@ -45,7 +56,7 @@ if [ "$UPGRADE" = true ]; then
     apt-get update -y
 
     echo "Upgrading installed container packages..."
-    apt-get upgrade -y
+    apt-get dist-upgrade -y -o Dpkg::Options::="--force-confdef"
     apt-get autoremove -y
 fi
 
