@@ -39,18 +39,36 @@ done
 # Install dependencies without manual intervention.
 export DEBIAN_FRONTEND=noninteractive
 
-# TODO: pkg update / pkg upgrade is broken for termux atm...
-#if [ "$UPGRADE" = true ]; then
-#    echo "Updating Termux package lists..."
-#    pkg update -y
-#
-#    echo "Upgrading installed Termux packages..."
-#    pkg upgrade -y
-#fi
+TERMUX_MIN_VERSION="0.118.3"
 
-if ! pkg list-installed | grep -q "^proot-distro/"; then
-    echo "Installing proot-distro..."
-    pkg install -y proot-distro
+if [ "$UPGRADE" = true ]; then
+    # pkg update / pkg upgrade brakes Google Play version of Termux at the moment,
+    # but works well the F-Droid version which is > 0.118.3.
+    if [ "$(printf '%s\n' "$TERMUX_MIN_VERSION" "$TERMUX_VERSION" | sort -V | head -n1)" = "$TERMUX_MIN_VERSION" ]; then
+        echo "Detected F-Droid version (>= $TERMUX_MIN_VERSION), proceeding with package update/upgrade..."
+
+        echo "Updating Termux package lists..."
+        apt-get update -y
+
+        echo "Upgrading installed Termux packages..."
+        apt-get dist-upgrade -y -o Dpkg::Options::="--force-confdef"
+        apt-get autoremove -y
+    else
+        echo "Detected Google Play version (< $TERMUX_MIN_VERSION), skipping package update/upgrade to avoid breakage..."
+    fi
 fi
+
+# List of the basic required packages.
+DEPENDENCIES="proot-distro util-linux uuid-utils"
+
+echo "Checking and installing dependencies..."
+
+# Install dependencies if they are not installed yet.
+for pkg in $DEPENDENCIES; do
+    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+        echo "Installing $pkg..."
+        apt-get install -y "$pkg"
+    fi
+done
 
 echo "Termux dependencies are up to date."

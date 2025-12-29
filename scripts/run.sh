@@ -103,9 +103,6 @@ fi
 
 # --- Configuration ---
 
-# Generate a UUID for the scraper session.
-SCRAPER_SESSION_ID=$(uuidgen)
-
 SCRIPTS_DIR=$(realpath "$(dirname "$0")")
 DISTRO_SCRIPTS_DIR="$SCRIPTS_DIR/distro"
 TERMUX_SCRIPTS_DIR="$SCRIPTS_DIR/termux"
@@ -144,6 +141,9 @@ if ! proot-distro login ubuntu -- true > /dev/null 2>&1; then
 fi
 
 # --- Main Execution ---
+
+# Generate a UUID for the scraper session.
+SCRAPER_SESSION_ID=$(uuidgen)
 
 run_scraper() {
     echo "Starting scraper..."
