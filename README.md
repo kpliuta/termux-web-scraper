@@ -14,6 +14,7 @@ A robust and flexible web scraping framework designed to run on Android devices 
 *   **Flexible and Extensible:** The framework is designed to be modular and extensible, allowing you to easily add your own scraping logic, error handling, and notification mechanisms.
 *   **Continuous Operation:** The `run.sh` script supports a loop mode, allowing you to run your scrapers continuously at a specified interval.
 *   **Easy to Use:** The framework provides a simple and intuitive builder pattern for creating and configuring your scrapers.
+*   **OpenVPN Integration:** Integration with OpenVPN client to bypass IP-based rate limiting and geo-blocking.
 
 ## How it Works
 
@@ -54,6 +55,7 @@ Before you can use the Termux Web Scraper, you need to have the following instal
 
 *   **Termux:** You can download Termux from the [F-Droid](https://f-droid.org/en/packages/com.termux/) or [Google Play](https://play.google.com/store/apps/details?id=com.termux) store.
 *   **Git:** You can install Git in Termux by running `pkg install git`.
+*   **OpenVPN for Android (optional):** To use the `--open-vpn` feature, install [OpenVPN for Android](https://play.google.com/store/apps/details?id=de.blinkt.openvpn), configure a VPN profile, and pass its name as the parameter (e.g., --open-vpn profile_name).
 
 You also need to:
 
@@ -119,7 +121,8 @@ The `run.sh` script is the main entry point for the web scraper. Here's a detail
 *   `-u, --upgrade`: Upgrade Termux and container packages (default: `false`).
 *   `-l, --loop`: Execute the scraper in a continuous loop (default: `false`).
 *   `-t, --loop-timeout`: Set the timeout in seconds between loop iterations. Requires the `--loop` argument (default: `300` seconds).
-*   `-i, --loop-error-ignore`: Ignore errors that occur during loop iterations (default: `false`).
+*   `-r, --retry x`: Set the number of times to retry a failed scraper iteration. If `--open-vpn` is set, a new VPN connection will be attempted on each retry (default: `1`).
+*   `--open-vpn profile`: Enable OpenVPN connection management with the specified profile. If set, the script will attempt to connect to OpenVPN using the provided profile name before each scraper iteration and disconnect afterwards. Requires the OpenVPN for Android app to be installed.
 *   `-o, --output-dir`: Specifies a local directory path on the host Android device to bind to a directory inside the container. This allows files, such as screenshots and scraped data, to be transferred from the container to the local device. The default binding is `/sdcard/termux-web-scraper` (local) to `/mnt/scraper/out` (container).
 *   `-h, --help`: Show the help message.
 
