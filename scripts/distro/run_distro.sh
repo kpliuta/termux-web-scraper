@@ -74,14 +74,14 @@ fi
 
 # Validate work directory.
 if [ ! -d "$WORK_DIR" ] || [ ! -f "$WORK_DIR/pyproject.toml" ]; then
-    echo "Error: Scenarios directory '$SCENARIOS_DIR' is not a valid Poetry project."
+    echo "Error: Scenarios directory '$WORK_DIR' is not a valid Poetry project."
     exit 1
 fi
 
 # Validate scenario file.
 SCENARIO_FILE_PATH="$WORK_DIR/$SCENARIO_FILE"
 if [ ! -f "$SCENARIO_FILE_PATH" ] || [ "${SCENARIO_FILE##*.}" != "py" ]; then
-    echo "Error: Script file '$SCRIPT_PATH' does not exist or is not a Python script."
+    echo "Error: Script file '$SCENARIO_FILE_PATH' does not exist or is not a Python script."
     exit 1
 fi
 
